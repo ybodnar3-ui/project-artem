@@ -27,12 +27,14 @@ const Bonus = z.object({
   value_label: z.string(),
 });
 
+// Property order matters: the generate stream sniffs these keys in order to
+// emit honest progress statuses (value_stack -> guarantee -> offer_name).
 export const OfferSchema = z.object({
-  offer_name: z.string(), // MAGIC-formula name
   dream_outcome: z.string(),
   value_stack: z.array(ValueStackItem), // problems -> solutions
   bonuses: z.array(Bonus),
   guarantee: z.object({ name: z.string(), statement: z.string() }),
+  offer_name: z.string(), // MAGIC-formula name
   pricing: z.object({
     anchor: z.string(), // what it would normally cost / total stack value
     price: z.string(), // the actual price
