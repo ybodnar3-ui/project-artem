@@ -1,8 +1,6 @@
-import { cache } from "react";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getBySlug, type GenerationRow } from "@/lib/db";
-import { SAMPLE_GENERATION, DEMO_SLUG } from "@/lib/sample";
+import { loadGeneration } from "@/lib/load";
 import { resolvePalette, getPresets } from "@/lib/presets";
 import { TEMPLATES } from "@/components/templates";
 import { env } from "@/lib/env";
@@ -12,20 +10,9 @@ export const dynamic = "force-dynamic";
 
 type Params = { params: Promise<{ slug: string }> };
 
-// Deduped across generateMetadata + the page render for the same request.
-const load = cache(async (slug: string): Promise<GenerationRow | null> => {
-  if (slug === DEMO_SLUG) return SAMPLE_GENERATION;
-  try {
-    return await getBySlug(slug);
-  } catch {
-    // DB not configured / unreachable — treat as not found rather than 500.
-    return null;
-  }
-});
-
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
-  const gen = await load(slug);
+  const gen = await loadGeneration(slug);
   if (!gen) return { title: "Not found — Offer Machine" };
   const hero = gen.page_config.sections.hero;
   return {
@@ -37,7 +24,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
 export default async function PublicPage({ params }: Params) {
   const { slug } = await params;
-  const gen = await load(slug);
+  const gen = await loadGeneration(slug);
   if (!gen) notFound();
 
   const config = gen.page_config;
